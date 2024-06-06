@@ -49,12 +49,12 @@ func Test_encodeBin(t *testing.T) {
 func TestDecode(t *testing.T) {
 	tests := []struct {
 		name       string
-		encodeText string
+		encodeText []byte
 		want       string
 	}{
 		{
 			name:       "decode test",
-			encodeText: "20 30 3C 18 77 4A E4 4D 28",
+			encodeText: []byte{32, 48, 60, 24, 119, 74, 228, 77, 40},
 			want:       "My name is Ted",
 		},
 	}

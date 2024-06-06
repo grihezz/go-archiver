@@ -14,10 +14,10 @@ import (
 
 var ErrEmptyPath = errors.New("path to file is not specified")
 
-const packedExtension = "vlc"
+const packedExtension = "chiharda"
 
-var vlcPackCmd = &cobra.Command{
-	Use:   "vlc",
+var chihardaPackCmd = &cobra.Command{
+	Use:   "chiharda",
 	Short: "Pack file using variable-length code",
 	Run:   pack,
 }
@@ -42,7 +42,7 @@ func pack(_ *cobra.Command, args []string) {
 	packed := vlc.Encode(string(data))
 	fmt.Println(string(data)) // TODO: remove
 
-	err = os.WriteFile(packedFileName(filePath), []byte(packed), 0644)
+	err = os.WriteFile(packedFileName(filePath), packed, 0644)
 	if err != nil {
 		handleErr(err)
 	}
@@ -55,5 +55,5 @@ func packedFileName(path string) string {
 }
 
 func init() {
-	packCmd.AddCommand(vlcPackCmd)
+	packCmd.AddCommand(chihardaPackCmd)
 }

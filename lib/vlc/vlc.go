@@ -92,12 +92,8 @@ func exportText(str string) string {
 	return buf.String()
 }
 
-func Decode(encodeText string) string {
-	hChunks := NewHexChunks(encodeText)
-	bChunk := hChunks.ToBinary()
-	bString := bChunk.Join()
-
+func Decode(encodeData []byte) string {
+	bString := NewBinChunks(encodeData).Join()
 	dTree := getEncodingTable().DecodingTree()
-
 	return exportText(dTree.Decode(bString))
 }
