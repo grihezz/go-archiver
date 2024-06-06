@@ -1,76 +1,9 @@
 package vlc
 
 import (
-	"fmt"
-	"strconv"
 	"strings"
 	"unicode"
-	"unicode/utf8"
 )
-
-type encodingTable map[rune]string
-type BinaryChunk string
-type BinaryChunks []BinaryChunk
-type HexChunk string
-type HexChunks []HexChunk
-
-const chunkSize = 8
-
-func Encode(str string) string {
-	str = prepareText(str)
-	bStr := encodeBin(str)
-	chunks := splitByChunks(bStr, chunkSize)
-	fmt.Println(chunks)
-
-	return chunks.ToHex().ToString()
-}
-
-func (hcs HexChunks) ToString() string {
-	const sep = " "
-
-	switch len(hcs) {
-	case 0:
-		return ""
-	case 1:
-		return string(hcs[0])
-	}
-
-	var buf strings.Builder
-
-	buf.WriteString(string(hcs[0]))
-
-	for _, hc := range hcs[1:] {
-		buf.WriteString(sep)
-		buf.WriteString(string(hc))
-
-	}
-	return buf.String()
-}
-func (bch BinaryChunks) ToHex() HexChunks {
-	res := make(HexChunks, 0, len(bch))
-
-	for _, chunk := range bch {
-		hexChunk := chunk.ToHex()
-		res = append(res, hexChunk)
-	}
-
-	return res
-}
-
-func (bc BinaryChunk) ToHex() HexChunk {
-	num, err := strconv.ParseUint(string(bc), 2, chunkSize)
-	if err != nil {
-		panic("cant parce binary chunk " + err.Error())
-	}
-
-	res := strings.ToUpper(fmt.Sprintf("%x", num))
-
-	if len(res) == 1 {
-		res = "0" + res
-	}
-
-	return HexChunk(res)
-}
 
 func prepareText(str string) string {
 	var buf strings.Builder
@@ -139,31 +72,32 @@ func getEncodingTable() encodingTable {
 	}
 }
 
-func splitByChunks(bStr string, chunkSize int) BinaryChunks {
-	strLen := utf8.RuneCountInString(bStr)
-	chunkCount := strLen / chunkSize
-
-	if strLen/chunkCount != 0 {
-		chunkCount++
-	}
-
-	res := make(BinaryChunks, 0, chunkCount)
-
+func exportText(str string) string {
 	var buf strings.Builder
+	isCapital := false
 
-	for i, ch := range bStr {
-		buf.WriteString(string(ch))
-		if (i+1)%chunkSize == 0 {
-			res = append(res, BinaryChunk(buf.String()))
-			buf.Reset()
+	for _, ch := range str {
+		if isCapital {
+			buf.WriteRune(unicode.ToUpper(ch))
+			isCapital = false
+			continue
+		}
+		if ch == '!' {
+			isCapital = true
+			continue
+		} else {
+			buf.WriteRune(ch)
 		}
 	}
+	return buf.String()
+}
 
-	if buf.Len() != 0 {
-		lastChunk := buf.String()
-		lastChunk += strings.Repeat("0", chunkSize-len(lastChunk))
+func Decode(encodeText string) string {
+	hChunks := NewHexChunks(encodeText)
+	bChunk := hChunks.ToBinary()
+	bString := bChunk.Join()
 
-		res = append(res, BinaryChunk(lastChunk))
-	}
-	return res
+	dTree := getEncodingTable().DecodingTree()
+
+	return exportText(dTree.Decode(bString))
 }
